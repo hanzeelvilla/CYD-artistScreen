@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
 #include <WiFiUdp.h>
 #include <TFT_eSPI.h>
 #include <NTPClient.h>
@@ -11,10 +13,13 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 String formattedTime;
 
+String token;
+
 bool wifiConnected();
 void initWifi();
 void reconnectWifi();
 void writeWifiData();
+String getToken();
 
 void setup() {
   Serial.begin(115200);
@@ -28,6 +33,9 @@ void setup() {
   initWifi();
   timeClient.begin();
   timeClient.setTimeOffset(TIME_ZONE);
+
+  token = getToken();
+  //Serial.println(token);
 }
 
 void loop() {
@@ -36,7 +44,7 @@ void loop() {
   
   timeClient.update();
   formattedTime = timeClient.getFormattedTime();
-  Serial.println(formattedTime);
+  //Serial.println(formattedTime);
 
   tft.setTextColor(TFT_BLUE, TFT_BLACK);
   tft.drawString(formattedTime, 260, 0, NORMAL_TEXT);
@@ -83,4 +91,29 @@ void writeWifiData() {
   tft.setTextColor(TFT_GREEN, TFT_BLACK);
   tft.drawString("Connected to " + String(SSID), 0, 0, NORMAL_TEXT);
   tft.drawString("IP address: " + WiFi.localIP().toString(), 0, 20, NORMAL_TEXT);
+}
+
+String getToken() {
+  HTTPClient http;
+
+  http.begin(TOKEN_URL);
+  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  String postData = "grant_type=client_credentials&client_id=" + String(CLIENT_ID) + "&client_secret=" + String(CLIENT_SECRET);
+
+  int httpCode = http.POST(postData);
+  String payload = http.getString();
+  http.end();
+
+  Serial.println(httpCode);
+  Serial.println(payload);
+
+  if (httpCode == 200) {
+    JsonDocument doc;
+    deserializeJson(doc, payload);
+    return doc["access_token"];
+  }
+  else {
+    Serial.println("Failed to get token");
+    return "";
+  }
 }
