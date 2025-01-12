@@ -1,9 +1,15 @@
 #include <Arduino.h>
 #include <WiFi.h>
+#include <WiFiUdp.h>
 #include <TFT_eSPI.h>
+#include <NTPClient.h>
 #include "config.h"
 
 TFT_eSPI tft = TFT_eSPI();
+
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
+String formattedTime;
 
 bool wifiConnected();
 void initWifi();
@@ -20,12 +26,21 @@ void setup() {
   tft.drawCentreString("Connecting to " + String(SSID), X_CENTER, Y_CENTER, NORMAL_TEXT);
   
   initWifi();
+  timeClient.begin();
+  timeClient.setTimeOffset(TIME_ZONE);
 }
 
 void loop() {
   if (!wifiConnected())
     reconnectWifi();
   
+  timeClient.update();
+  formattedTime = timeClient.getFormattedTime();
+  Serial.println(formattedTime);
+
+  tft.setTextColor(TFT_BLUE, TFT_BLACK);
+  tft.drawString(formattedTime, 260, 0, NORMAL_TEXT);
+
   delay(1000);
 }
 
