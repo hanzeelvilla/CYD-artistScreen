@@ -1,25 +1,25 @@
-#include <Arduino.h>
-#include <WiFi.h>
-#include <HTTPClient.h>
-#include <ArduinoJson.h>
-#include <WiFiUdp.h>
-#include <TFT_eSPI.h>
-#include <NTPClient.h>
 #include "config.h"
 
+/* -------------------------------- VARIABLES ------------------------------- */
 TFT_eSPI tft = TFT_eSPI();
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 String formattedTime;
 
+Preferences preferences;
+
 String token;
 
+/* -------------------------------- FUNCTIONS ------------------------------- */
 bool wifiConnected();
 void initWifi();
 void reconnectWifi();
 void writeWifiData();
-String getToken();
+
+String generateToken();
+void saveTokenInNamespace();
+String getTokenFromNamespace();
 
 void setup() {
   Serial.begin(115200);
@@ -32,10 +32,21 @@ void setup() {
   
   initWifi();
   timeClient.begin();
-  timeClient.setTimeOffset(TIME_ZONE);
+  timeClient.setTimeOffset(TIME_ZONE); // adjust timezone
+  
+  // getting token
+  token = getTokenFromNamespace();
 
-  token = getToken();
-  //Serial.println(token);
+  if (token == "") { // If the token namespace is empty, generate a new one (first time)
+    Serial.println("Token not found, generating a new one");
+    saveTokenInNamespace();
+    token = getTokenFromNamespace();
+    Serial.println("Token generated and saved!");
+  }
+  else
+    Serial.println("A token was found!");
+
+  Serial.println(token);
 }
 
 void loop() {
@@ -51,6 +62,8 @@ void loop() {
 
   delay(1000);
 }
+
+/* -------------------------------- FUNCTIONS ------------------------------- */
 
 bool wifiConnected() {
   return WiFi.status() == WL_CONNECTED;
@@ -90,10 +103,10 @@ void writeWifiData() {
   tft.fillScreen(TFT_BLACK);
   tft.setTextColor(TFT_GREEN, TFT_BLACK);
   tft.drawString("Connected to " + String(SSID), 0, 0, NORMAL_TEXT);
-  tft.drawString("IP address: " + WiFi.localIP().toString(), 0, 20, NORMAL_TEXT);
+  //tft.drawString("IP address: " + WiFi.localIP().toString(), 0, 20, NORMAL_TEXT);
 }
 
-String getToken() {
+String generateToken() {
   HTTPClient http;
 
   http.begin(TOKEN_URL);
@@ -116,4 +129,20 @@ String getToken() {
     Serial.println("Failed to get token");
     return "";
   }
+}
+
+void saveTokenInNamespace() {
+  String token = generateToken();
+
+  preferences.begin(TOKEN, false);
+  preferences.putString(TOKEN_KEY, token);
+  preferences.end();
+}
+
+String getTokenFromNamespace() {
+  preferences.begin(TOKEN, true);
+  String token = preferences.getString(TOKEN_KEY, "");
+  preferences.end();
+
+  return token;
 }
