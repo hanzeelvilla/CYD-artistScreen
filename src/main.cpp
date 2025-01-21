@@ -2,36 +2,24 @@
 
 /* -------------------------------- VARIABLES ------------------------------- */
 // SCREEN
-TFT_eSPI tft = TFT_eSPI();
-enum Screen {
-  FIRST_WIFI_CONNECTION,
-  HOME,
-  WIFI_LOST,
-};
+Screen screen;
 
 WiFiMulti wifiMulti;
+
+Preferences preferences;
+String token;
 
 // CLOCK
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 String formattedTime;
 
-Preferences preferences;
-String token;
-
-// song
+// SONG
 JsonDocument currentSong;
-
-Screen currentScreen = FIRST_WIFI_CONNECTION;
 
 /* -------------------------------- FUNCTIONS ------------------------------- */
 bool wifiConnected();
 void initWifi();
-
-void changeScreen(Screen newScreen);
-void writeFirstWifiConnection();
-void writeWifiData();
-void writeWifiLost();
 
 String generateToken();
 void saveTokenInNamespace(String token);
@@ -41,25 +29,24 @@ JsonDocument getCurrentSong();
 
 void setup() {
   Serial.begin(115200);
-  
   /* --------------------------------- SCREEN --------------------------------- */
-  tft.begin();
-  tft.fillScreen(TFT_BLACK);
-  tft.setRotation(1);
+  screen.init();
   
   /* --------------------------------- WIFI --------------------------------- */
   WiFi.mode(WIFI_STA);
   wifiMulti.addAP(SSID1, PSWD1);
   wifiMulti.addAP(SSID2, PSWD2); // comment or remove this line if you have only one AP
   // add more APs if needed
-  writeFirstWifiConnection();
+  
+  screen.writeFirstWifiConnection();
   initWifi();
+
+  /* ---------------------------------- CLOCK --------------------------------- */
+  timeClient.begin(); 
+  timeClient.setTimeOffset(GMT_6); // adjust timezone
   
+  /* ---------------------------------- TOKEN --------------------------------- */
   /*
-  timeClient.begin();
-  timeClient.setTimeOffset(GMT-6); // adjust timezone
-  
-  // getting token
   token = getTokenFromNamespace();
 
   if (token == "") { // If the token namespace is empty, generate a new one (first time)
@@ -81,43 +68,36 @@ void setup() {
 void loop() {
   if (wifiConnected()) {
     Serial.println("Connected to WiFi " + WiFi.SSID());
+    
+    timeClient.update();
+    formattedTime = timeClient.getFormattedTime();
+    Serial.println(formattedTime);
 
-    if (currentScreen == WIFI_LOST)
-      changeScreen(HOME);
+    if (screen.currentScreen != HOME)
+      screen.changeScreen(HOME);
   }
   else {
     Serial.println("WiFi connection lost");
 
-    if (currentScreen == HOME)
-      changeScreen(WIFI_LOST);
+    if (screen.currentScreen != WIFI_LOST)
+      screen.changeScreen(WIFI_LOST);
   }
 
-  switch (currentScreen) {
+  switch (screen.currentScreen) {
     case HOME:
-      writeWifiData();
+      screen.writeWifiData(WiFi.SSID());
+      screen.writeTime(formattedTime);
       break;
     case WIFI_LOST:
-      writeWifiLost();
+      screen.writeWifiLost();
       break;
+    
   }
-  
-  /*
-  if (!wifiConnected())
-    reconnectWifi();
-  
-  timeClient.update();
-  formattedTime = timeClient.getFormattedTime();
-  //Serial.println(formattedTime);
 
-  tft.setTextColor(TFT_BLUE, TFT_BLACK);
-  tft.drawString(formattedTime, 260, 0, NORMAL_TEXT);
-
-  */
   delay(1000);
 }
 
 /* -------------------------------- FUNCTIONS ------------------------------- */
-
 bool wifiConnected() {
   return wifiMulti.run() == WL_CONNECTED;
 }
@@ -135,31 +115,7 @@ void initWifi() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  changeScreen(HOME);
-}
-
-void changeScreen(Screen newScreen) {
-  currentScreen = newScreen;
-  tft.fillScreen(TFT_BLACK);
-}
-
-void writeFirstWifiConnection() {
-  tft.setTextSize(2);
-  tft.setTextColor(TFT_BLUE, TFT_BLACK);
-  tft.drawCentreString("Connecting to Wifi...", X_CENTER, Y_CENTER, NORMAL_TEXT);
-}
-
-void writeWifiData() {
-  tft.setTextSize(1);
-  tft.setTextColor(TFT_BLUE, TFT_BLACK);
-  tft.drawString("Connected to " + WiFi.SSID(), 0, 0, NORMAL_TEXT);
-  //tft.drawString("IP address: " + WiFi.localIP().toString(), 0, 20, NORMAL_TEXT);
-}
-
-void writeWifiLost() {
-  tft.setTextSize(2);
-  tft.setTextColor(TFT_RED, TFT_BLACK);
-  tft.drawCentreString("WiFi connection lost", X_CENTER, Y_CENTER, NORMAL_TEXT);
+  screen.changeScreen(HOME);
 }
 
 /*
