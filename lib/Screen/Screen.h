@@ -3,7 +3,9 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <SPI.h>
 #include <TFT_eSPI.h>
+#include "../spotifyController/spotifyController.h"
 
 /* --------------------------------- SCREEN --------------------------------- */
 #define WIDTH 320
@@ -26,10 +28,12 @@ class Screen {
     public:
         myScreens currentScreen = FIRST_WIFI_CONNECTION;
         void init();
+        void clear();
         void changeScreen(myScreens newScreen);
         void writeFirstWifiConnection();
         void writeWifiData(String ssid);
         void writeTime(String time);
+        void writeSong(Song *song);
         void writeWifiLost();
 };
 

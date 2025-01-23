@@ -7,9 +7,13 @@ void Screen::init() {
     Serial.println("Screen initialized");
 }
 
+void Screen::clear() {
+  tft.fillScreen(TFT_BLACK);
+}
+
 void Screen::changeScreen(myScreens newScreen) {
   currentScreen = newScreen;
-  tft.fillScreen(TFT_BLACK);
+  clear();
 }
 
 void Screen::writeFirstWifiConnection() {
@@ -28,6 +32,15 @@ void Screen::writeWifiData(String ssid) {
 void Screen::writeTime(String time) {
   tft.setTextColor(TFT_BLUE, TFT_BLACK);
   tft.drawString(time, 260, 0, NORMAL_TEXT);
+}
+
+void Screen::writeSong(Song *song) {
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.setTextSize(2);
+  tft.drawCentreString(song->name, X_CENTER, Y_CENTER - 60, NORMAL_TEXT);
+  tft.setTextSize(1);
+  tft.drawCentreString(song->artist, X_CENTER, Y_CENTER, NORMAL_TEXT);
+  tft.drawCentreString(song->album, X_CENTER, Y_CENTER + 20, NORMAL_TEXT);
 }
 
 void Screen::writeWifiLost() {

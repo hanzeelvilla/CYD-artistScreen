@@ -1,29 +1,28 @@
 #include "config.h"
 
 /* -------------------------------- VARIABLES ------------------------------- */
+WiFiMulti wifiMulti;
+
 // SCREEN
 Screen screen;
 
-WiFiMulti wifiMulti;
-
-Preferences preferences;
-String token;
+// SPOTIFY CONTROLLER
+SpotifyController spotifyController;
 
 // CLOCK
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 String formattedTime;
 
-// SONG
-JsonDocument currentSong;
+JsonDocument jsonSong;
+Song currentSong;
+unsigned long currentTime = 0;
+unsigned long previousTime = 0;
+unsigned long remainingSongTime = 0; 
 
 /* -------------------------------- FUNCTIONS ------------------------------- */
 bool wifiConnected();
 void initWifi();
-
-String generateToken();
-void saveTokenInNamespace(String token);
-String getTokenFromNamespace();
 
 JsonDocument getCurrentSong();
 
@@ -45,24 +44,8 @@ void setup() {
   timeClient.begin(); 
   timeClient.setTimeOffset(GMT_6); // adjust timezone
   
-  /* ---------------------------------- TOKEN --------------------------------- */
-  /*
-  token = getTokenFromNamespace();
-
-  if (token == "") { // If the token namespace is empty, generate a new one (first time)
-    Serial.println("Token not found, generating a new one");
-    
-    String newToken = generateToken();
-    saveTokenInNamespace(newToken);
-
-    token = getTokenFromNamespace();
-    Serial.println("Token generated and saved!");
-  }
-  else
-    Serial.println("A token was found!");
-
-  Serial.println(token);
-  */
+  /* --------------------------------- SPOTIFY -------------------------------- */
+  spotifyController.init();
 }
 
 void loop() {
@@ -72,6 +55,38 @@ void loop() {
     timeClient.update();
     formattedTime = timeClient.getFormattedTime();
     Serial.println(formattedTime);
+
+    // change automatically the song when it ends
+    // I doesn't work if the song is paused or if the song is changed manually
+    currentTime = millis();
+    if (currentTime - previousTime >= remainingSongTime) {
+      jsonSong = spotifyController.getCurrentSong();
+      
+      screen.clear();
+
+      if (jsonSong.containsKey("item")) {
+        currentSong.name = jsonSong["item"]["name"].as<String>();
+        currentSong.album = jsonSong["item"]["album"]["name"].as<String>();
+        currentSong.artist = jsonSong["item"]["artists"][0]["name"].as<String>();
+        currentSong.isPlaying = jsonSong["is_playing"];
+        currentSong.duration = jsonSong["item"]["duration_ms"];
+        currentSong.progress = jsonSong["progress_ms"];
+
+        if (currentSong.isPlaying) {
+          remainingSongTime = currentSong.duration - currentSong.progress;
+          previousTime = currentTime;
+        }
+        else {
+          // song is paused or changed manually
+          // I don't know what to do here
+        }
+      }
+      else { // may be a 429 error or smt else
+        currentSong.name = "No song playing";
+        currentSong.album = "";
+        currentSong.artist = "";
+      }
+    }
 
     if (screen.currentScreen != HOME)
       screen.changeScreen(HOME);
@@ -87,6 +102,11 @@ void loop() {
     case HOME:
       screen.writeWifiData(WiFi.SSID());
       screen.writeTime(formattedTime);
+
+      if (currentSong.name != "" && currentSong.album != "" && currentSong.artist != "") {
+        screen.writeSong(&currentSong);
+      }
+
       break;
     case WIFI_LOST:
       screen.writeWifiLost();
@@ -117,87 +137,3 @@ void initWifi() {
 
   screen.changeScreen(HOME);
 }
-
-/*
-String generateToken() {
-  HTTPClient http;
-
-  http.begin(TOKEN_URL);
-  http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-  String postData = "grant_type=refresh_token&refresh_token=" + String(SPOTIFY_REFRESH_TOKEN) + "&client_id=" + String(CLIENT_ID) + "&client_secret=" + String(CLIENT_SECRET);
-
-  int httpCode = http.POST(postData);
-  String payload = http.getString();
-  http.end();
-
-  Serial.println(httpCode);
-  Serial.println(payload);
-
-  if (httpCode == 200) {
-    JsonDocument doc;
-    deserializeJson(doc, payload);
-    return doc["access_token"];
-  }
-  else {
-    Serial.println("Failed to get token");
-    return "";
-  }
-}
-
-void saveTokenInNamespace(String token) {
-  preferences.begin(TOKEN, false);
-  preferences.putString(TOKEN_KEY, token);
-  preferences.end();
-}
-
-String getTokenFromNamespace() {
-  preferences.begin(TOKEN, true);
-  String token = preferences.getString(TOKEN_KEY, "");
-  preferences.end();
-
-  return token;
-}
-
-JsonDocument getCurrentSong() {
-  HTTPClient http;
-
-  Serial.println("Fetching current song");
-  http.begin(CURRENTLY_PLAYING_URL);
-  http.addHeader("Authorization", "Bearer " + token);
-
-  int httpCode = http.GET();
-  String payload = http.getString();
-  http.end();
-
-  Serial.println(httpCode);
-  Serial.println(payload);
-
-  switch (httpCode) {
-    case 200:
-    {
-      JsonDocument doc;
-      deserializeJson(doc, payload);
-      return doc;
-    }
-    case 401:
-    {
-      Serial.println("Token expired, generating a new one");
-
-      String newToken = generateToken();
-      saveTokenInNamespace(newToken);
-      token = getTokenFromNamespace();
-
-      Serial.println("Token generated and saved!");
-      Serial.println(token);
-      return getCurrentSong();
-    }
-    default:
-    {
-      Serial.println("Failed to get current song");
-      JsonDocument doc;
-      deserializeJson(doc, payload);
-      return doc;
-    }
-  }
-}
-*/
