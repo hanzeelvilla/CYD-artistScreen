@@ -16,7 +16,10 @@
 #define TOKEN "spotify_token"
 #define TOKEN_KEY "token"
 
+#define COOLDOWN 5000
+
 struct Song {
+    String id;
     String name;
     String album;
     String artist;

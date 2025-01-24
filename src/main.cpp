@@ -16,6 +16,7 @@ String formattedTime;
 
 JsonDocument jsonSong;
 Song currentSong;
+String previousSongId = "";
 unsigned long currentTime = 0;
 unsigned long previousTime = 0;
 unsigned long remainingSongTime = 0; 
@@ -56,30 +57,37 @@ void loop() {
     formattedTime = timeClient.getFormattedTime();
     Serial.println(formattedTime);
 
-    // change automatically the song when it ends
-    // I doesn't work if the song is paused or if the song is changed manually
     currentTime = millis();
-    if (currentTime - previousTime >= remainingSongTime) {
+    if (currentTime - previousTime >= COOLDOWN) { // previousSongTime
       jsonSong = spotifyController.getCurrentSong();
       
-      screen.clear();
-
       if (jsonSong.containsKey("item")) {
-        currentSong.name = jsonSong["item"]["name"].as<String>();
-        currentSong.album = jsonSong["item"]["album"]["name"].as<String>();
-        currentSong.artist = jsonSong["item"]["artists"][0]["name"].as<String>();
-        currentSong.isPlaying = jsonSong["is_playing"];
-        currentSong.duration = jsonSong["item"]["duration_ms"];
-        currentSong.progress = jsonSong["progress_ms"];
+        currentSong.id = jsonSong["item"]["id"].as<String>();
 
-        if (currentSong.isPlaying) {
-          remainingSongTime = currentSong.duration - currentSong.progress;
-          previousTime = currentTime;
+        if (currentSong.id != previousSongId) {
+          previousSongId = currentSong.id;
+
+          currentSong.name = jsonSong["item"]["name"].as<String>();
+          currentSong.album = jsonSong["item"]["album"]["name"].as<String>();
+          currentSong.artist = jsonSong["item"]["artists"][0]["name"].as<String>();
+          currentSong.isPlaying = jsonSong["is_playing"];
+          currentSong.duration = jsonSong["item"]["duration_ms"];
+          currentSong.progress = jsonSong["progress_ms"];
+
+          /*
+          if (currentSong.isPlaying) {
+            remainingSongTime = currentSong.duration - currentSong.progress;
+            previousTime = currentTime;
+          }
+          else {
+            // song is paused or changed manually
+            // I don't know what to do here
+          }
+          */
+          screen.clear();
         }
-        else {
-          // song is paused or changed manually
-          // I don't know what to do here
-        }
+        // else the song is the same
+        previousTime = currentTime;
       }
       else { // may be a 429 error or smt else
         currentSong.name = "No song playing";
