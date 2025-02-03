@@ -10,8 +10,14 @@
 /* --------------------------------- SCREEN --------------------------------- */
 #define WIDTH 320
 #define HEIGHT 240
-#define X_CENTER WIDTH / 2
-#define Y_CENTER HEIGHT / 2
+#define X_CENTER_SCREEN WIDTH / 2
+#define Y_CENTER_SCREEN HEIGHT / 2
+
+/* ----------------------------------- BTN ---------------------------------- */
+#define X_PREVIOUS_BTN X_CENTER_SCREEN - 100
+#define X_NEXT_BTN X_CENTER_SCREEN + 100
+#define RADIUS 30
+#define Y_BTN 200
 
 /* -------------------------------- FONT TEXT ------------------------------- */
 #define NORMAL_TEXT 2
@@ -25,16 +31,23 @@ enum myScreens {
 class Screen {
     private:
         TFT_eSPI tft = TFT_eSPI();
+        TFT_eSPI_Button btnPausePlay;
+        TFT_eSPI_Button btnNext;
+        TFT_eSPI_Button btnPrevious;
     public:
         myScreens currentScreen = FIRST_WIFI_CONNECTION;
         void init();
         void clear();
         void changeScreen(myScreens newScreen);
-        void writeFirstWifiConnection();
-        void writeWifiData(String ssid);
-        void writeTime(String time);
-        void writeSong(Song *song);
-        void writeWifiLost();
+        void drawFirstWifiConnection();
+        void drawWifiData(String ssid);
+        void drawTime(String time);
+        void drawSong(Song *song);
+        void drawPreviousBtn();
+        void drawPauseBtn();
+        void drawPlayBtn();
+        void drawNextBtn();
+        void drawWifiLost();
 };
 
 #endif

@@ -38,7 +38,7 @@ void setup() {
   wifiMulti.addAP(SSID2, PSWD2); // comment or remove this line if you have only one AP
   // add more APs if needed
   
-  screen.writeFirstWifiConnection();
+  screen.drawFirstWifiConnection();
   initWifi();
 
   /* ---------------------------------- CLOCK --------------------------------- */
@@ -74,16 +74,6 @@ void loop() {
           currentSong.duration = jsonSong["item"]["duration_ms"];
           currentSong.progress = jsonSong["progress_ms"];
 
-          /*
-          if (currentSong.isPlaying) {
-            remainingSongTime = currentSong.duration - currentSong.progress;
-            previousTime = currentTime;
-          }
-          else {
-            // song is paused or changed manually
-            // I don't know what to do here
-          }
-          */
           screen.clear();
         }
         // else the song is the same
@@ -108,16 +98,20 @@ void loop() {
 
   switch (screen.currentScreen) {
     case HOME:
-      screen.writeWifiData(WiFi.SSID());
-      screen.writeTime(formattedTime);
+      screen.drawWifiData(WiFi.SSID());
+      screen.drawTime(formattedTime);
 
       if (currentSong.name != "" && currentSong.album != "" && currentSong.artist != "") {
-        screen.writeSong(&currentSong);
+        screen.drawSong(&currentSong);
       }
+
+      screen.drawPauseBtn();
+      screen.drawNextBtn();
+      screen.drawPreviousBtn();
 
       break;
     case WIFI_LOST:
-      screen.writeWifiLost();
+      screen.drawWifiLost();
       break;
     
   }
