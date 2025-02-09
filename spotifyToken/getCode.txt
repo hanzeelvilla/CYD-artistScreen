@@ -1,0 +1,3 @@
+https://accounts.spotify.com/authorize?client_id=PASTE_HERE&
+response_type=code&redirect_uri=PASTE_HERE&
+scope=user-read-private%20user-read-currently-playing
