@@ -6,6 +6,10 @@ WiFiMulti wifiMulti;
 // SCREEN
 Screen screen;
 
+// TOUCH
+SPIClass mySpi = SPIClass(VSPI);
+XPT2046_Touchscreen ts(XPT2046_CS, XPT2046_IRQ);
+
 // SPOTIFY CONTROLLER
 SpotifyController spotifyController;
 
@@ -31,7 +35,7 @@ void setup() {
   Serial.begin(115200);
   /* --------------------------------- SCREEN --------------------------------- */
   screen.init();
-  
+
   /* --------------------------------- WIFI --------------------------------- */
   WiFi.mode(WIFI_STA);
   wifiMulti.addAP(SSID1, PSWD1);
@@ -40,6 +44,12 @@ void setup() {
   
   screen.drawFirstWifiConnection();
   initWifi();
+  
+  /* ---------------------------------- TOUCH --------------------------------- */
+  mySpi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS);
+  ts.begin(mySpi);
+  ts.setRotation(1);
+  Serial.println("Touch initialized");
 
   /* ---------------------------------- CLOCK --------------------------------- */
   timeClient.begin(); 
@@ -58,7 +68,7 @@ void loop() {
     Serial.println(formattedTime);
 
     currentTime = millis();
-    if (currentTime - previousTime >= COOLDOWN) { // previousSongTime
+    if (currentTime - previousTime >= COOLDOWN) {
       jsonSong = spotifyController.getCurrentSong();
       
       if (jsonSong.containsKey("item")) {
@@ -86,8 +96,32 @@ void loop() {
       }
     }
 
+    if (ts.touched()) {
+      TS_Point p = ts.getPoint();
+      // change cors to screen size
+      int touchX = map(p.x, TS_MIN, TS_MAX, 0, SCREEN_WIDTH);
+      int touchY = map(p.y, TS_MIN, TS_MAX, 0, SCREEN_HEIGHT);
+
+      Serial.print("X: ");
+      Serial.print(touchX);
+      Serial.print(" Y: ");
+      Serial.println(touchY);
+      
+      if (screen.isPreviousBtnPressed(touchX, touchY)) {
+        Serial.println("Previous button pressed");
+        //spotifyController.previous();
+      }
+
+      if (screen.isNextBtnPressed(touchX, touchY)) {
+        Serial.println("Skippin to next song");
+        spotifyController.skipToNextSong();
+      }
+
+    }
+
     if (screen.currentScreen != HOME)
       screen.changeScreen(HOME);
+    
   }
   else {
     Serial.println("WiFi connection lost");
@@ -108,8 +142,8 @@ void loop() {
       screen.drawPauseBtn();
       screen.drawNextBtn();
       screen.drawPreviousBtn();
-
       break;
+    
     case WIFI_LOST:
       screen.drawWifiLost();
       break;

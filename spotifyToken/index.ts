@@ -8,7 +8,7 @@ const provideCode = args.length === 3 && !!args[2] == true;
 
 if (!provideCode) {
     console.log('Code not provided');
-    console.log('Usage: node index.js <code>');
+    console.log('Usage: node index.ts <code>');
     process.exit(1);
 }
 

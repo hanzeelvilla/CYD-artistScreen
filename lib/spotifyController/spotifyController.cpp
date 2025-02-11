@@ -58,8 +58,6 @@ String SpotifyController::generateToken() {
 }
 
 JsonDocument SpotifyController::getCurrentSong() {
-  HTTPClient http;
-
   Serial.println("Fetching current song");
   http.begin(CURRENTLY_PLAYING_URL);
   http.addHeader("Authorization", "Bearer " + token);
@@ -98,4 +96,16 @@ JsonDocument SpotifyController::getCurrentSong() {
       return doc;
     }
   }
+}
+
+void SpotifyController::skipToNextSong() {
+  http.begin("https://api.spotify.com/v1/me/player/next");
+  http.addHeader("Authorization", "Bearer " + token);
+
+  int httpCode = http.POST("");
+  String payload = http.getString();
+  http.end();
+
+  Serial.println(httpCode);
+  Serial.println(payload);
 }

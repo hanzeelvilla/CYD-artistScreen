@@ -30,6 +30,7 @@ struct Song {
 
 class SpotifyController {
     private:
+        HTTPClient http;
         Preferences preferences;
         String getTokenFromNamespace();
         void saveTokenInNamespace(String token);
@@ -38,6 +39,7 @@ class SpotifyController {
     public:
         void init();
         JsonDocument getCurrentSong();
+        void skipToNextSong();
 };  
 
 #endif

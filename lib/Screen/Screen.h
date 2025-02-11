@@ -8,15 +8,15 @@
 #include "../spotifyController/spotifyController.h"
 
 /* --------------------------------- SCREEN --------------------------------- */
-#define WIDTH 320
-#define HEIGHT 240
-#define X_CENTER_SCREEN WIDTH / 2
-#define Y_CENTER_SCREEN HEIGHT / 2
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 240
+#define SCREEN_X_CENTER SCREEN_WIDTH / 2
+#define SCREEN_Y_CENTER SCREEN_HEIGHT / 2
 
 /* ----------------------------------- BTN ---------------------------------- */
-#define X_PREVIOUS_BTN X_CENTER_SCREEN - 100
-#define X_NEXT_BTN X_CENTER_SCREEN + 100
-#define RADIUS 30
+#define PREVIOUS_BTN_X_CENTER SCREEN_X_CENTER - 100
+#define NEXT_BTN_X_CENTER SCREEN_X_CENTER + 100
+#define BTN_RADIUS 30
 #define Y_BTN 200
 
 /* -------------------------------- FONT TEXT ------------------------------- */
@@ -48,6 +48,8 @@ class Screen {
         void drawPlayBtn();
         void drawNextBtn();
         void drawWifiLost();
+        bool isPreviousBtnPressed(int x, int y);
+        bool isNextBtnPressed(int x, int y);
 };
 
 #endif

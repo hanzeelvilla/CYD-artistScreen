@@ -19,7 +19,7 @@ void Screen::changeScreen(myScreens newScreen) {
 void Screen::drawFirstWifiConnection() {
   tft.setTextSize(2);
   tft.setTextColor(TFT_BLUE, TFT_BLACK);
-  tft.drawCentreString("Connecting to Wifi...", X_CENTER_SCREEN, Y_CENTER_SCREEN, NORMAL_TEXT);
+  tft.drawCentreString("Connecting to Wifi...", SCREEN_X_CENTER, SCREEN_Y_CENTER, NORMAL_TEXT);
 }
 
 void Screen::drawWifiData(String ssid) {
@@ -37,22 +37,22 @@ void Screen::drawTime(String time) {
 void Screen::drawSong(Song *song) {
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
   tft.setTextSize(2);
-  tft.drawCentreString(song->name, X_CENTER_SCREEN, Y_CENTER_SCREEN - 60, NORMAL_TEXT);
+  tft.drawCentreString(song->name, SCREEN_X_CENTER, SCREEN_Y_CENTER - 60, NORMAL_TEXT);
   tft.setTextSize(1);
-  tft.drawCentreString(song->artist, X_CENTER_SCREEN, Y_CENTER_SCREEN, NORMAL_TEXT);
-  tft.drawCentreString(song->album, X_CENTER_SCREEN, Y_CENTER_SCREEN + 20, NORMAL_TEXT);
+  tft.drawCentreString(song->artist, SCREEN_X_CENTER, SCREEN_Y_CENTER, NORMAL_TEXT);
+  tft.drawCentreString(song->album, SCREEN_X_CENTER, SCREEN_Y_CENTER + 20, NORMAL_TEXT);
 }
 
 void Screen::drawPreviousBtn() {
-  tft.fillCircle(X_PREVIOUS_BTN, Y_BTN, RADIUS, TFT_BLUE);
+  tft.fillCircle(PREVIOUS_BTN_X_CENTER, Y_BTN, BTN_RADIUS, TFT_BLUE);
   tft.fillTriangle(
-    X_PREVIOUS_BTN - 10, Y_BTN, 
-    X_PREVIOUS_BTN + 10, Y_BTN - 10, 
-    X_PREVIOUS_BTN + 10, Y_BTN + 10,
+    PREVIOUS_BTN_X_CENTER - 10, Y_BTN, 
+    PREVIOUS_BTN_X_CENTER + 10, Y_BTN - 10, 
+    PREVIOUS_BTN_X_CENTER + 10, Y_BTN + 10,
     TFT_WHITE
   );
   tft.fillRect(
-    X_PREVIOUS_BTN - 12, 
+    PREVIOUS_BTN_X_CENTER - 12, 
     Y_BTN - 10,
     3,
     20,
@@ -61,16 +61,16 @@ void Screen::drawPreviousBtn() {
 }
 
 void Screen::drawPauseBtn() {
-  tft.fillCircle(X_CENTER_SCREEN, Y_BTN, RADIUS, TFT_BLUE); 
+  tft.fillCircle(SCREEN_X_CENTER, Y_BTN, BTN_RADIUS, TFT_BLUE); 
   tft.fillRect(
-    X_CENTER_SCREEN - 10, 
+    SCREEN_X_CENTER - 10, 
     Y_BTN - 15,
     5,
     30,
     TFT_WHITE
   );
   tft.fillRect(
-    X_CENTER_SCREEN + 5, 
+    SCREEN_X_CENTER + 5, 
     Y_BTN - 15,
     5,
     30,
@@ -79,25 +79,25 @@ void Screen::drawPauseBtn() {
 }
 
 void Screen::drawPlayBtn() {
-  tft.fillCircle(X_CENTER_SCREEN, Y_BTN, RADIUS, TFT_BLUE); 
+  tft.fillCircle(SCREEN_X_CENTER, Y_BTN, BTN_RADIUS, TFT_BLUE); 
   tft.fillTriangle(
-    X_CENTER_SCREEN - 10, Y_BTN - 15, 
-    X_CENTER_SCREEN - 10, Y_BTN + 15, 
-    X_CENTER_SCREEN + 15, Y_BTN,
+    SCREEN_X_CENTER - 10, Y_BTN - 15, 
+    SCREEN_X_CENTER - 10, Y_BTN + 15, 
+    SCREEN_X_CENTER + 15, Y_BTN,
     TFT_WHITE
   );
 }
 
 void Screen::drawNextBtn() {
-  tft.fillCircle(X_NEXT_BTN, Y_BTN, RADIUS, TFT_BLUE);
+  tft.fillCircle(NEXT_BTN_X_CENTER, Y_BTN, BTN_RADIUS, TFT_BLUE);
   tft.fillTriangle(
-    X_NEXT_BTN + 10, Y_BTN, 
-    X_NEXT_BTN - 10, Y_BTN - 10, 
-    X_NEXT_BTN - 10, Y_BTN + 10,
+    NEXT_BTN_X_CENTER + 10, Y_BTN, 
+    NEXT_BTN_X_CENTER - 10, Y_BTN - 10, 
+    NEXT_BTN_X_CENTER - 10, Y_BTN + 10,
     TFT_WHITE
   );
   tft.fillRect(
-    X_NEXT_BTN + 9, 
+    NEXT_BTN_X_CENTER + 9, 
     Y_BTN - 10,
     3,
     20,
@@ -108,5 +108,17 @@ void Screen::drawNextBtn() {
 void Screen::drawWifiLost() {
   tft.setTextSize(2);
   tft.setTextColor(TFT_RED, TFT_BLACK);
-  tft.drawCentreString("WiFi connection lost", X_CENTER_SCREEN, Y_CENTER_SCREEN, NORMAL_TEXT);
+  tft.drawCentreString("WiFi connection lost", SCREEN_X_CENTER, SCREEN_Y_CENTER, NORMAL_TEXT);
+}
+
+bool Screen::isPreviousBtnPressed(int x, int y) {
+  int dx = x - NEXT_BTN_X_CENTER; // IDK why works this way and not with PREVIOUS_BTN_X_CENTER
+  int dy = y - Y_BTN;
+  return (dx * dx + dy * dy) <= (BTN_RADIUS * BTN_RADIUS);
+}
+
+bool Screen::isNextBtnPressed(int x, int y) {
+  int dx = x - PREVIOUS_BTN_X_CENTER; // IDK why works this way and not with NEXT_BTN_X_CENTER 
+  int dy = y - Y_BTN;
+  return (dx * dx + dy * dy) <= (BTN_RADIUS * BTN_RADIUS);
 }
