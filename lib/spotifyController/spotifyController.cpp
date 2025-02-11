@@ -101,6 +101,7 @@ JsonDocument SpotifyController::getCurrentSong() {
 void SpotifyController::skipToNextSong() {
   http.begin("https://api.spotify.com/v1/me/player/next");
   http.addHeader("Authorization", "Bearer " + token);
+  http.addHeader("Content-Length", "0");
 
   int httpCode = http.POST("");
   String payload = http.getString();
