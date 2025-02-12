@@ -108,12 +108,12 @@ void loop() {
       Serial.println(touchY);
       
       if (screen.isPreviousBtnPressed(touchX, touchY)) {
-        Serial.println("Previous button pressed");
-        //spotifyController.previous();
+        Serial.println("Skipping to previous song");
+        spotifyController.skipToPreviousSong();
       }
 
       if (screen.isNextBtnPressed(touchX, touchY)) {
-        Serial.println("Skippin to next song");
+        Serial.println("Skipping to next song");
         spotifyController.skipToNextSong();
       }
 

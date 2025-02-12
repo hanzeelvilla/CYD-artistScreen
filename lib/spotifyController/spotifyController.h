@@ -40,6 +40,7 @@ class SpotifyController {
         void init();
         JsonDocument getCurrentSong();
         void skipToNextSong();
+        void skipToPreviousSong();
 };  
 
 #endif

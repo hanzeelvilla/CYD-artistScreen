@@ -110,3 +110,16 @@ void SpotifyController::skipToNextSong() {
   Serial.println(httpCode);
   Serial.println(payload);
 }
+
+void SpotifyController::skipToPreviousSong() {
+  http.begin("https://api.spotify.com/v1/me/player/previous");
+  http.addHeader("Authorization", "Bearer " + token);
+  http.addHeader("Content-Length", "0");
+
+  int httpCode = http.POST("");
+  String payload = http.getString();
+  http.end();
+
+  Serial.println(httpCode);
+  Serial.println(payload);
+}
